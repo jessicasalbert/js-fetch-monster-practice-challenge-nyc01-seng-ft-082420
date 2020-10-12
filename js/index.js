@@ -1,4 +1,5 @@
 document.addEventListener("DOMContentLoaded", () => {
+    submitHandler()
     monsterCount()
     fetchMonsters()
     prevPage()
@@ -7,17 +8,57 @@ document.addEventListener("DOMContentLoaded", () => {
 
 let page = 1
 let upperLimit 
+let monsterTotal
 
-
-function monsterCount() {
-     fetch('http://localhost:3000/monsters/')
-    .then( res => res.json())
-    .then( monsters => {
-        upperLimit = Math.ceil(monsters.length/50)
+function submitHandler() {
+    let form = document.querySelector("#monster-form")
+    form.addEventListener("submit", e => {
+        e.preventDefault()
+        let name = e.target.name.value
+        let age = e.target.age.value
+        let desc = e.target.description.value
+        newMonster(name, age, desc)
+        form.reset()
     })
 }
 
+function newMonster(name, age, desc) {
+    fetch("http://localhost:3000/monsters/", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json"
+        },
+        body: JSON.stringify({
+            name: name,
+            age: age,
+            description: desc
+        })
+    })
+    .then(response => response.json())
+    .then(monster => {
+        upperLimit = Math.ceil(monsterTotal/50)
+        let pageMonsters = document.querySelectorAll(".monster").length
+        const btnR = document.querySelector("#forward")
+        if(pageMonsters == 50 && page == upperLimit) {
+            btnR.disabled = false
+        }
+        monsterTotal++
+        upperLimit = Math.ceil(monsterTotal/50)
+        if(page == upperLimit) {
+            renderMonsters([monster])
+        }
+    })
+}
 
+function monsterCount() {
+    fetch('http://localhost:3000/monsters/')
+    .then( res => res.json())
+    .then( monsters => {
+        monsterTotal = monsters.length
+        upperLimit = Math.ceil(monsterTotal/50)
+    })
+}
 
 function fetchMonsters() {
     const btnL = document.querySelector("#back")
